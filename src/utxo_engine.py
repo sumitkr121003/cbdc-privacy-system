@@ -240,6 +240,13 @@ class UTXOEngine:
                 )
             )
 
+        # Reject output ID collisions before changing the ledger.
+        for output in new_outputs:
+            if output.output_id in self.utxos:
+                raise ValueError(
+                    f"Transaction output ID already exists: {output.output_id}"
+                )
+
         # 6. Commit the state change after validation succeeds.
         for output_id in input_ids:
             self.spent_utxos.add(output_id)

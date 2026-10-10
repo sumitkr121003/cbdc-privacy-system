@@ -1,6 +1,6 @@
 import pytest
 
-from src.utxo_engine import UTXOEngine
+from src.utxo_engine import UTXO, UTXOEngine
 
 from src.wallet import Wallet
 
@@ -444,3 +444,32 @@ def test_successful_transfers_have_unique_transaction_ids():
 
     assert transaction_ids == [1, 2]
     assert len(transaction_ids) == len(set(transaction_ids))
+
+
+def test_output_id_collision_does_not_modify_ledger():
+    engine = UTXOEngine()
+    engine.issue_test_funds("Alice", 100)
+
+    original_input = next(iter(engine.get_unspent_outputs("Alice")))
+
+    # Simulate an output ID that already exists.
+    collision = UTXO(output_id="tx-1-out-1", owner="Eve", amount=7)
+    engine.utxos[collision.output_id] = collision
+
+    with pytest.raises(ValueError, match="output ID already exists"):
+        engine.transfer(
+            sender="Alice",
+            recipient="Bob",
+            amount=30,
+            fee=2,
+            input_ids=[original_input.output_id],
+        )
+
+    # The failed transfer must leave the ledger unchanged.
+    assert engine.utxos[collision.output_id] == collision
+    assert original_input.output_id not in engine.spent_utxos
+    assert engine.get_balance("Alice") == 100
+    assert engine.get_balance("Bob") == 0
+    assert engine.total_fees == 0
+    assert engine.transaction_history == []
+    assert engine.next_transaction_id == 1
