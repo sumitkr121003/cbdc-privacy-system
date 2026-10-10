@@ -416,3 +416,29 @@ def test_modifying_returned_history_does_not_change_stored_history():
     assert len(stored_history) == 1
     assert stored_history[0]["amount"] == 10
     assert len(stored_history[0]["outputs"]) == 2
+
+
+def test_successful_transfers_have_unique_transaction_ids():
+    engine = UTXOEngine()
+
+    first_utxo = engine.issue_test_funds("Alice", 20)
+    first_result = engine.transfer(
+        "Alice", "Bob", 10, 1, [first_utxo]
+    )
+
+    # Spend Alice's change output in a second transaction.
+    alice_change = engine.get_unspent_outputs("Alice")[0]
+    second_result = engine.transfer(
+        "Alice", "Charlie", 5, 1, [alice_change.output_id]
+    )
+
+    assert first_result["transaction_id"] == 1
+    assert second_result["transaction_id"] == 2
+
+    history = engine.get_transaction_history()
+    transaction_ids = [
+        transaction["transaction_id"] for transaction in history
+    ]
+
+    assert transaction_ids == [1, 2]
+    assert len(transaction_ids) == len(set(transaction_ids))
