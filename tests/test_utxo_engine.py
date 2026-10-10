@@ -321,3 +321,44 @@ def test_same_wallet_cannot_be_registered_to_two_owners():
 
     assert engine.wallets["Alice"] is alice
     assert "Mallory" not in engine.wallets
+
+
+@pytest.mark.parametrize("amount", [1.5, True, False, "10", None])
+def test_invalid_payment_amount_is_rejected(amount):
+    engine = UTXOEngine()
+    alice_utxo = engine.issue_test_funds("Alice", 15)
+
+    with pytest.raises(ValueError, match="integer"):
+        engine.transfer(
+            "Alice", "Bob", amount, 1, [alice_utxo]
+        )
+
+    assert engine.get_balance("Alice") == 15
+    assert engine.get_balance("Bob") == 0
+    assert alice_utxo not in engine.spent_utxos
+
+
+@pytest.mark.parametrize("fee", [1.5, True, False, "1", None])
+def test_invalid_fee_is_rejected(fee):
+    engine = UTXOEngine()
+    alice_utxo = engine.issue_test_funds("Alice", 15)
+
+    with pytest.raises(ValueError, match="integer"):
+        engine.transfer(
+            "Alice", "Bob", 10, fee, [alice_utxo]
+        )
+
+    assert engine.get_balance("Alice") == 15
+    assert engine.get_balance("Bob") == 0
+    assert alice_utxo not in engine.spent_utxos
+
+
+@pytest.mark.parametrize("amount", [1.5, True, False, "10", None])
+def test_invalid_test_fund_amount_is_rejected(amount):
+    engine = UTXOEngine()
+
+    with pytest.raises(ValueError, match="integer"):
+        engine.issue_test_funds("Alice", amount)
+
+    assert engine.get_balance("Alice") == 0
+    assert engine.next_genesis_id == 1

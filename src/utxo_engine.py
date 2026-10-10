@@ -97,13 +97,17 @@ class UTXOEngine:
 
         return wallet.verify_signature(message, signature)
 
-    def issue_test_funds(self, owner, amount):
+            
+    def issue_test_funds(self, owner, amount): 
         """
-        Create initial test funds for a wallet.
-        This is a simulator-only issuance operation.
+    Create initial test funds for a wallet.
+    This is a simulator-only issuance operation.
         """
         if not owner:
             raise ValueError("Owner cannot be empty")
+
+        if type(amount) is not int:
+            raise ValueError("Amount must be an integer")
 
         if amount <= 0:
             raise ValueError("Amount must be positive")
@@ -121,6 +125,7 @@ class UTXOEngine:
         )
 
         return output_id
+
 
     def get_balance(self, owner):
         """
@@ -155,6 +160,12 @@ class UTXOEngine:
 
         if sender == recipient:
             raise ValueError("Sender and recipient must differ")
+
+        if type(amount) is not int:
+            raise ValueError("Payment amount must be an integer")
+
+        if type(fee) is not int:
+            raise ValueError("Fee must be an integer")
 
         if amount <= 0:
             raise ValueError("Payment amount must be positive")
