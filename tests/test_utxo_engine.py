@@ -123,6 +123,7 @@ def test_insufficient_funds_are_rejected():
     # Failed transactions must not update these values.
     assert engine.next_transaction_id == original_transaction_id
     assert engine.total_fees == original_fees
+    assert engine.get_transaction_history() == []
 
 
 def test_cannot_spend_another_users_utxo():
