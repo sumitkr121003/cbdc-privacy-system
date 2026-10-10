@@ -393,3 +393,26 @@ def test_failed_transfer_is_not_saved_in_history():
         )
 
     assert engine.get_transaction_history() == []
+
+
+def test_modifying_returned_history_does_not_change_stored_history():
+    engine = UTXOEngine()
+    alice_utxo = engine.issue_test_funds("Alice", 15)
+
+    engine.transfer(
+        "Alice", "Bob", 10, 1, [alice_utxo]
+    )
+
+    history = engine.get_transaction_history()
+
+    # Try modifying the returned record and its nested outputs.
+    history[0]["amount"] = 999
+    history[0]["outputs"].clear()
+    history.clear()
+
+    # The engine's stored history must remain unchanged.
+    stored_history = engine.get_transaction_history()
+
+    assert len(stored_history) == 1
+    assert stored_history[0]["amount"] == 10
+    assert len(stored_history[0]["outputs"]) == 2

@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from copy import deepcopy
 from src.wallet import Wallet
 
 
@@ -151,9 +152,10 @@ class UTXOEngine:
         ]
 
     
+    
     def get_transaction_history(self):
-        """Return a copy of successful transaction history."""
-        return self.transaction_history.copy()
+        """Return a deep copy of successful transaction history."""
+        return deepcopy(self.transaction_history)
 
 
     def transfer(self, sender, recipient, amount, fee, input_ids):
