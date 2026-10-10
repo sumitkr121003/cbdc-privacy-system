@@ -256,6 +256,7 @@ class UTXOEngine:
             "recipient": recipient,
             "amount": amount,
             "fee": fee,
+            "input_ids": list(input_ids),
             "change": change,
             "outputs": new_outputs,
             "status": "SUCCESS"

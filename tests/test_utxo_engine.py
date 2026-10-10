@@ -380,6 +380,7 @@ def test_successful_transfer_is_saved_in_history():
     assert history[0]["recipient"] == "Bob"
     assert history[0]["amount"] == 10
     assert history[0]["fee"] == 1
+    assert history[0]["input_ids"] == [alice_utxo]
     assert history[0]["status"] == "SUCCESS"
 
 
