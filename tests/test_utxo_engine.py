@@ -362,3 +362,34 @@ def test_invalid_test_fund_amount_is_rejected(amount):
 
     assert engine.get_balance("Alice") == 0
     assert engine.next_genesis_id == 1
+
+
+def test_successful_transfer_is_saved_in_history():
+    engine = UTXOEngine()
+    alice_utxo = engine.issue_test_funds("Alice", 15)
+
+    result = engine.transfer(
+        "Alice", "Bob", 10, 1, [alice_utxo]
+    )
+
+    history = engine.get_transaction_history()
+
+    assert len(history) == 1
+    assert history[0]["transaction_id"] == result["transaction_id"]
+    assert history[0]["sender"] == "Alice"
+    assert history[0]["recipient"] == "Bob"
+    assert history[0]["amount"] == 10
+    assert history[0]["fee"] == 1
+    assert history[0]["status"] == "SUCCESS"
+
+
+def test_failed_transfer_is_not_saved_in_history():
+    engine = UTXOEngine()
+    alice_utxo = engine.issue_test_funds("Alice", 15)
+
+    with pytest.raises(ValueError, match="Insufficient funds"):
+        engine.transfer(
+            "Alice", "Bob", 15, 1, [alice_utxo]
+        )
+
+    assert engine.get_transaction_history() == []

@@ -57,6 +57,7 @@ class UTXOEngine:
        self.next_genesis_id = 1
        self.total_fees = 0
        self.wallets = {}
+       self.transaction_history = []
     
     def register_wallet(self, owner, wallet):
         """Register an owner without allowing wallet replacement."""
@@ -148,6 +149,12 @@ class UTXOEngine:
             if utxo.owner == owner
             and output_id not in self.spent_utxos
         ]
+
+    
+    def get_transaction_history(self):
+        """Return a copy of successful transaction history."""
+        return self.transaction_history.copy()
+
 
     def transfer(self, sender, recipient, amount, fee, input_ids):
         """
@@ -241,7 +248,7 @@ class UTXOEngine:
         self.total_fees += fee
         self.next_transaction_id += 1
 
-        return {
+        transaction_record = {
             "transaction_id": transaction_id,
             "sender": sender,
             "recipient": recipient,
@@ -250,4 +257,6 @@ class UTXOEngine:
             "change": change,
             "outputs": new_outputs,
             "status": "SUCCESS"
-        }
+            }
+        self.transaction_history.append(transaction_record)
+        return transaction_record
