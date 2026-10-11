@@ -473,3 +473,145 @@ def test_output_id_collision_does_not_modify_ledger():
     assert engine.total_fees == 0
     assert engine.transaction_history == []
     assert engine.next_transaction_id == 1
+
+
+def test_validate_transfer_does_not_modify_ledger():
+    engine = UTXOEngine()
+    alice_utxo = engine.issue_test_funds("Alice", 15)
+
+    original_balance = engine.get_balance("Alice")
+    original_history = engine.get_transaction_history()
+    original_transaction_id = engine.next_transaction_id
+    original_fees = engine.total_fees
+    original_spent = set(engine.spent_utxos)
+
+    result = engine.validate_transfer(
+        sender="Alice",
+        recipient="Bob",
+        amount=10,
+        fee=1,
+        input_ids=[alice_utxo],
+    )
+
+    assert result is True
+    assert engine.get_balance("Alice") == original_balance
+    assert engine.get_balance("Bob") == 0
+    assert engine.get_transaction_history() == original_history
+    assert engine.next_transaction_id == original_transaction_id
+    assert engine.total_fees == original_fees
+    assert engine.spent_utxos == original_spent
+
+
+def test_validate_transfer_rejects_insufficient_funds_without_changes():
+    engine = UTXOEngine()
+    alice_utxo = engine.issue_test_funds("Alice", 5)
+
+    with pytest.raises(ValueError, match="Insufficient funds"):
+        engine.validate_transfer(
+            sender="Alice",
+            recipient="Bob",
+            amount=5,
+            fee=1,
+            input_ids=[alice_utxo],
+        )
+
+    assert engine.get_balance("Alice") == 5
+    assert engine.get_balance("Bob") == 0
+    assert alice_utxo not in engine.spent_utxos
+    assert engine.transaction_history == []
+    assert engine.total_fees == 0
+    assert engine.next_transaction_id == 1
+
+
+def test_validate_transfer_rejects_spent_input_without_changes():
+    engine = UTXOEngine()
+    alice_utxo = engine.issue_test_funds("Alice", 15)
+
+    # Spend the input through the existing transfer method.
+    engine.transfer("Alice", "Bob", 10, 1, [alice_utxo])
+
+    balance_alice = engine.get_balance("Alice")
+    balance_bob = engine.get_balance("Bob")
+    history_before = engine.get_transaction_history()
+    fees_before = engine.total_fees
+    transaction_id_before = engine.next_transaction_id
+
+    with pytest.raises(ValueError, match="already spent"):
+        engine.validate_transfer(
+            sender="Alice",
+            recipient="Charlie",
+            amount=5,
+            fee=1,
+            input_ids=[alice_utxo],
+        )
+
+    assert engine.get_balance("Alice") == balance_alice
+    assert engine.get_balance("Bob") == balance_bob
+    assert engine.get_balance("Charlie") == 0
+    assert engine.get_transaction_history() == history_before
+    assert engine.total_fees == fees_before
+    assert engine.next_transaction_id == transaction_id_before
+
+
+def test_validate_transfer_rejects_duplicate_inputs_without_changes():
+    engine = UTXOEngine()
+    alice_utxo = engine.issue_test_funds("Alice", 10)
+
+    with pytest.raises(ValueError, match="Duplicate transaction inputs"):
+        engine.validate_transfer(
+            sender="Alice",
+            recipient="Bob",
+            amount=15,
+            fee=0,
+            input_ids=[alice_utxo, alice_utxo],
+        )
+
+    assert engine.get_balance("Alice") == 10
+    assert engine.get_balance("Bob") == 0
+    assert alice_utxo not in engine.spent_utxos
+    assert engine.get_transaction_history() == []
+    assert engine.total_fees == 0
+    assert engine.next_transaction_id == 1
+
+
+def test_validate_transfer_rejects_foreign_input_without_changes():
+    engine = UTXOEngine()
+    alice_utxo = engine.issue_test_funds("Alice", 10)
+
+    with pytest.raises(ValueError, match="does not own UTXO"):
+        engine.validate_transfer(
+            sender="Mallory",
+            recipient="Bob",
+            amount=5,
+            fee=1,
+            input_ids=[alice_utxo],
+        )
+
+    assert engine.get_balance("Alice") == 10
+    assert engine.get_balance("Mallory") == 0
+    assert engine.get_balance("Bob") == 0
+    assert alice_utxo not in engine.spent_utxos
+    assert engine.get_transaction_history() == []
+    assert engine.total_fees == 0
+    assert engine.next_transaction_id == 1
+
+
+def test_validate_transfer_rejects_unknown_input_without_changes():
+    engine = UTXOEngine()
+    engine.issue_test_funds("Alice", 10)
+
+    with pytest.raises(ValueError, match="Unknown UTXO"):
+        engine.validate_transfer(
+            sender="Alice",
+            recipient="Bob",
+            amount=5,
+            fee=1,
+            input_ids=["unknown-utxo"],
+        )
+
+    assert engine.get_balance("Alice") == 10
+    assert engine.get_balance("Bob") == 0
+    assert engine.spent_utxos == set()
+    assert engine.get_transaction_history() == []
+    assert engine.total_fees == 0
+    assert engine.next_transaction_id == 1
