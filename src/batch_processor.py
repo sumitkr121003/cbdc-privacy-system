@@ -1,4 +1,5 @@
 import threading
+import time
 from concurrent.futures import ThreadPoolExecutor
 from typing import List, Optional, Tuple
 
@@ -99,7 +100,11 @@ class BatchTransactionProcessor:
             return False, str(err), None
 
     def process_batch(
-        self, transactions: List[Transaction], workers: int = 4
+        self,
+        transactions: List[Transaction],
+        workers: int = 4,
+        completion_timestamps_ns: Optional[dict[int, Tuple[str, int]]] = None,
+        completion_recording_overhead_ns: Optional[dict[int, int]] = None,
     ) -> List[TransactionResult]:
         """
         Process a batch of transactions using two-phase validation.
@@ -107,12 +112,32 @@ class BatchTransactionProcessor:
         Args:
             transactions: Ordered list of transactions to process.
             workers: Number of worker threads for Phase 1 parallel validation.
+            completion_timestamps_ns: Optional empty dict populated with each
+                input index mapped to (final status, perf_counter_ns timestamp).
+                This benchmark-scoped observer does not alter returned results.
+            completion_recording_overhead_ns: Optional empty dict populated
+                with an approximate per-outcome timestamp-recording cost. It is
+                only valid when completion_timestamps_ns is also supplied.
 
         Returns:
             List of TransactionResult objects preserving the original input order.
         """
         if not transactions:
             return []
+
+        if completion_timestamps_ns is not None and (
+            not isinstance(completion_timestamps_ns, dict)
+            or completion_timestamps_ns
+        ):
+            raise ValueError("completion_timestamps_ns must be an empty dict")
+        if completion_recording_overhead_ns is not None and (
+            completion_timestamps_ns is None
+            or not isinstance(completion_recording_overhead_ns, dict)
+            or completion_recording_overhead_ns
+        ):
+            raise ValueError(
+                "completion_recording_overhead_ns requires an empty timestamp dict"
+            )
 
         worker_count = max(1, workers)
         indexed_txs = list(enumerate(transactions))
@@ -142,12 +167,23 @@ class BatchTransactionProcessor:
         # -------------------------------------------------------------
         results: List[TransactionResult] = []
 
+        def record_final_result(idx: int, result: TransactionResult) -> None:
+            results.append(result)
+            if completion_timestamps_ns is not None:
+                completed_at_ns = time.perf_counter_ns()
+                completion_timestamps_ns[idx] = (result.status, completed_at_ns)
+                if completion_recording_overhead_ns is not None:
+                    completion_recording_overhead_ns[idx] = (
+                        time.perf_counter_ns() - completed_at_ns
+                    )
+
         with self.engine._lock:
             for idx, tx in indexed_txs:
                 is_valid, error_msg, _ = phase1_results[idx]
 
                 if not is_valid:
-                    results.append(
+                    record_final_result(
+                        idx,
                         TransactionResult(
                             status="REJECTED",
                             tx_id=None,
@@ -174,7 +210,8 @@ class BatchTransactionProcessor:
                         break
 
                 if conflict_found:
-                    results.append(
+                    record_final_result(
+                        idx,
                         TransactionResult(
                             status="CONFLICT_DOUBLE_SPEND",
                             tx_id=None,
@@ -204,7 +241,8 @@ class BatchTransactionProcessor:
                         input_ids=list(tx.input_ids),
                     )
 
-                    results.append(
+                    record_final_result(
+                        idx,
                         TransactionResult(
                             status="SUCCESS",
                             tx_id=record["transaction_id"],
@@ -225,7 +263,8 @@ class BatchTransactionProcessor:
                         if "already spent" in err_text
                         else "REJECTED"
                     )
-                    results.append(
+                    record_final_result(
+                        idx,
                         TransactionResult(
                             status=status,
                             tx_id=None,

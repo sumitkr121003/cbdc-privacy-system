@@ -1,4 +1,5 @@
 import pytest
+from unittest.mock import Mock
 from src.utxo_engine import Transaction, TransactionResult, UTXOEngine
 from src.wallet import Wallet
 from src.batch_processor import BatchTransactionProcessor
@@ -29,6 +30,62 @@ def test_batch_processor_empty_batch():
     processor = BatchTransactionProcessor(engine)
     results = processor.process_batch([], workers=4)
     assert results == []
+
+
+def test_optional_completion_observer_records_success_conflict_and_rejection():
+    engine = UTXOEngine()
+    processor = BatchTransactionProcessor(engine)
+    wallet = Wallet()
+    engine.register_wallet("Alice", wallet)
+    input_id = engine.issue_test_funds(wallet.get_address(), 20)
+    valid = _signed_transaction(wallet, "Alice", "Bob", 5, 1, [input_id])
+    invalid = Transaction(
+        sender=valid.sender,
+        recipient="Carol",
+        amount=5,
+        fee=1,
+        input_ids=valid.input_ids,
+        signature=b"\x00" * 64,
+    )
+    timestamps = {}
+    overhead = {}
+
+    results = processor.process_batch(
+        [valid, valid, invalid],
+        workers=2,
+        completion_timestamps_ns=timestamps,
+        completion_recording_overhead_ns=overhead,
+    )
+
+    assert [result.status for result in results] == [
+        "SUCCESS", "CONFLICT_DOUBLE_SPEND", "REJECTED"
+    ]
+    assert {index: status for index, (status, _) in timestamps.items()} == {
+        0: "SUCCESS", 1: "CONFLICT_DOUBLE_SPEND", 2: "REJECTED"
+    }
+    assert all(isinstance(timestamp, int) and timestamp >= 0
+               for _, timestamp in timestamps.values())
+    assert set(overhead) == {0, 1, 2}
+    assert all(value >= 0 for value in overhead.values())
+    assert len(engine.get_transaction_history()) == 1
+    assert engine.spent_utxos == {input_id}
+
+
+def test_completion_observer_is_disabled_by_default(monkeypatch):
+    engine = UTXOEngine()
+    processor = BatchTransactionProcessor(engine)
+    wallet = Wallet()
+    engine.register_wallet("Alice", wallet)
+    input_id = engine.issue_test_funds(wallet.get_address(), 10)
+    tx = _signed_transaction(wallet, "Alice", "Bob", 5, 1, [input_id])
+    clock = Mock()
+    monkeypatch.setattr("src.batch_processor.time.perf_counter_ns", clock)
+
+    results = processor.process_batch([tx], workers=1)
+
+    assert len(results) == 1
+    assert results[0].status == "SUCCESS"
+    clock.assert_not_called()
 
 
 def test_batch_processor_invalid_engine():

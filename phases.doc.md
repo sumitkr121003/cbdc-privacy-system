@@ -137,9 +137,9 @@ Build `benchmarks/compare_parallel.py` to empirically benchmark sequential vs. p
 6. Format output in clean Markdown tables and save JSON reports to `benchmarks/results/`.
 
 ### 4.4 Acceptance Criteria
-- [ ] Sequential and parallel benchmarks execute cleanly under identical workloads.
-- [ ] All metrics accurately recorded and reported.
-- [ ] Benchmark timing excludes pre-allocation setup time.
+- [x] Sequential and parallel benchmarks execute cleanly under identical workloads; all 108 measured comparisons in the 36-configuration pairwise matrix passed outcome-equivalence and ledger-integrity checks.
+- [x] All metrics accurately recorded and reported, including wall time, attempted/successful throughput, speedup, sequential and parallel latency distributions, whole-system CPU utilization, process CPU time, and peak traced Python memory.
+- [x] Benchmark timing excludes pre-allocation setup time; wallet creation, workload generation/signing, and ledger funding are outside measured execution intervals.
 
 ### 4.5 Definition of Done
 Benchmark executes cleanly for 100, 1,000, and 10,000 transactions; reports formatted properly.
@@ -152,9 +152,9 @@ Benchmark executes cleanly for 100, 1,000, and 10,000 transactions; reports form
 Execute the full benchmark matrix, objectively analyze the research question (*"Can safe parallel transaction validation improve throughput compared with sequential validation while preserving UTXO integrity?"*), and record comprehensive findings in `docs/research-findings.md`.
 
 ### 5.2 Acceptance Criteria
-- [ ] Full matrix of benchmark results recorded and analyzed.
-- [ ] Core hypothesis evaluated objectively with empirical evidence.
-- [ ] `README.md` and `docs/research-findings.md` complete and accurate.
+- [x] Full current matrix (`compare_20261011T171052*_pairwise.json`, 36 configurations) recorded and analyzed in `benchmarks/PHASE4_FINDINGS.md` and `docs/research-findings.md`; older matrix runs are retained as historical evidence.
+- [x] Core hypothesis evaluated objectively with independently recomputed run-level evidence from the current matrix in `docs/research-findings.md`.
+- [x] `README.md` and `docs/research-findings.md` complete and accurate; final project-owner documentation review passed with no inconsistencies.
 
 ---
 
@@ -165,5 +165,5 @@ Execute the full benchmark matrix, objectively analyze the research question (*"
 | **Phase 1** | Thread-Safe State Synchronization & Formal Transaction Data Models | **COMPLETE** | Oct 11, 2026 |
 | **Phase 2** | Two-Phase Batch Validation Pipeline (`BatchTransactionProcessor`) | **COMPLETE** | Oct 11, 2026 |
 | **Phase 3** | Concurrency & Double-Spend Stress Test Suite | **COMPLETE** | Oct 11, 2026 |
-| **Phase 4** | Comparative Performance Benchmark Harness | PENDING | Phase 4 |
-| **Phase 5** | Research Analysis & Findings Report | PENDING | Phase 5 |
+| **Phase 4** | Comparative Performance Benchmark Harness | **COMPLETE** | Oct 11, 2026 |
+| **Phase 5** | Research Analysis & Findings Report | **COMPLETE** | Oct 11, 2026 |

@@ -1,0 +1,195 @@
+{
+  "configuration": {
+    "conflict_group_count": 0,
+    "conflict_participants": 0,
+    "contention_definition": "Percentage of attempted transactions that belong to an input-sharing pair; conflicting counts are losing attempts.",
+    "contention_percent": 0,
+    "initial_supply": 300,
+    "measured_run_count": 3,
+    "signed_transactions": true,
+    "transaction_count": 100,
+    "warmup_run_count": 1,
+    "workers": 4
+  },
+  "measured_runs": [
+    {
+      "outcomes_equivalent": true,
+      "parallel": {
+        "amortized_ms_per_attempted_transaction": 0.178481,
+        "attempted": 100,
+        "batch_latency_seconds": 0.0178481,
+        "conflict_participants": 0,
+        "conflicting": 0,
+        "peak_traced_memory_bytes": 298973,
+        "process_cpu_seconds": 0.015625,
+        "rejected": 0,
+        "successful": 100,
+        "throughput_attempted_per_second": 5602.83727679697,
+        "throughput_successful_per_second": 5602.83727679697
+      },
+      "sequential": {
+        "attempted": 100,
+        "conflict_participants": 0,
+        "conflicting": 0,
+        "elapsed_seconds": 0.016729,
+        "peak_traced_memory_bytes": 102788,
+        "per_transaction_latency": {
+          "mean_ms": 0.165752,
+          "p50_ms": 0.1612,
+          "p95_ms": 0.1852,
+          "p99_ms": 0.2362
+        },
+        "process_cpu_seconds": 0.015625,
+        "rejected": 0,
+        "successful": 100,
+        "throughput_attempted_per_second": 5977.6436128877995,
+        "throughput_successful_per_second": 5977.6436128877995
+      }
+    },
+    {
+      "outcomes_equivalent": true,
+      "parallel": {
+        "amortized_ms_per_attempted_transaction": 0.177572,
+        "attempted": 100,
+        "batch_latency_seconds": 0.0177572,
+        "conflict_participants": 0,
+        "conflicting": 0,
+        "peak_traced_memory_bytes": 298205,
+        "process_cpu_seconds": 0.03125,
+        "rejected": 0,
+        "successful": 100,
+        "throughput_attempted_per_second": 5631.51848264366,
+        "throughput_successful_per_second": 5631.51848264366
+      },
+      "sequential": {
+        "attempted": 100,
+        "conflict_participants": 0,
+        "conflicting": 0,
+        "elapsed_seconds": 0.0166737,
+        "peak_traced_memory_bytes": 102788,
+        "per_transaction_latency": {
+          "mean_ms": 0.165225,
+          "p50_ms": 0.1616,
+          "p95_ms": 0.1728,
+          "p99_ms": 0.2571
+        },
+        "process_cpu_seconds": 0.015625,
+        "rejected": 0,
+        "successful": 100,
+        "throughput_attempted_per_second": 5997.469068053281,
+        "throughput_successful_per_second": 5997.469068053281
+      }
+    },
+    {
+      "outcomes_equivalent": true,
+      "parallel": {
+        "amortized_ms_per_attempted_transaction": 0.172887,
+        "attempted": 100,
+        "batch_latency_seconds": 0.0172887,
+        "conflict_participants": 0,
+        "conflicting": 0,
+        "peak_traced_memory_bytes": 298437,
+        "process_cpu_seconds": 0.03125,
+        "rejected": 0,
+        "successful": 100,
+        "throughput_attempted_per_second": 5784.1248908246425,
+        "throughput_successful_per_second": 5784.1248908246425
+      },
+      "sequential": {
+        "attempted": 100,
+        "conflict_participants": 0,
+        "conflicting": 0,
+        "elapsed_seconds": 0.0174473,
+        "peak_traced_memory_bytes": 102788,
+        "per_transaction_latency": {
+          "mean_ms": 0.172729,
+          "p50_ms": 0.1674,
+          "p95_ms": 0.2008,
+          "p99_ms": 0.241
+        },
+        "process_cpu_seconds": 0.015625,
+        "rejected": 0,
+        "successful": 100,
+        "throughput_attempted_per_second": 5731.5458552326145,
+        "throughput_successful_per_second": 5731.5458552326145
+      }
+    }
+  ],
+  "measurement": {
+    "instrumentation": "tracemalloc runs during both timed execution paths; its instrumentation overhead is included consistently.",
+    "peak_traced_python_memory": "tracemalloc peak bytes above the per-execution starting allocation baseline",
+    "process_cpu": "time.process_time_ns elapsed process CPU seconds; not CPU utilization percentage",
+    "sequential_latency": "Per-transfer latency samples are reported for sequential execution only; no parallel latency percentiles are inferred.",
+    "timing_boundary": "Workload generation, wallet creation, signing, funding, integrity checks, outcome comparison, and report writing are excluded. Sequential timing covers transfer_signed calls; parallel timing covers process_batch including executor setup, validation, commits, and shutdown.",
+    "wall_clock": "time.perf_counter_ns elapsed seconds"
+  },
+  "metadata": {
+    "benchmark": "signed sequential versus parallel batch comparison",
+    "generated_at_utc": "2026-10-11T11:59:43.571930+00:00",
+    "platform": "Windows-11-10.0.26300-SP0",
+    "python_version": "3.13.5"
+  },
+  "speedup": {
+    "definition": "parallel attempted throughput / sequential attempted throughput",
+    "per_measured_run": [
+      0.9372986480353652,
+      0.9389824972405559,
+      1.009173622076848
+    ],
+    "ratio_of_mean_attempted_throughput": 0.9611345141996998
+  },
+  "summary": {
+    "counts": {
+      "attempted": 100,
+      "conflict_participants": 0,
+      "conflicting": 0,
+      "rejected": 0,
+      "successful": 100
+    },
+    "parallel": {
+      "batch_latency_seconds": {
+        "mean": 0.017631333333333332,
+        "sample_standard_deviation": 0.000300189778862194
+      },
+      "peak_traced_memory_bytes": {
+        "mean": 298538.3333333333,
+        "sample_standard_deviation": 393.9001565540858
+      },
+      "process_cpu_seconds": {
+        "mean": 0.026041666666666668,
+        "sample_standard_deviation": 0.009021097956087902
+      },
+      "throughput_attempted_per_second": {
+        "mean": 5672.826883421757,
+        "sample_standard_deviation": 97.44787186539538
+      },
+      "throughput_successful_per_second": {
+        "mean": 5672.826883421757,
+        "sample_standard_deviation": 97.44787186539538
+      }
+    },
+    "sequential": {
+      "elapsed_seconds": {
+        "mean": 0.01695,
+        "sample_standard_deviation": 0.0004315611080716141
+      },
+      "peak_traced_memory_bytes": {
+        "mean": 102788.0,
+        "sample_standard_deviation": 0.0
+      },
+      "process_cpu_seconds": {
+        "mean": 0.015625,
+        "sample_standard_deviation": 0.0
+      },
+      "throughput_attempted_per_second": {
+        "mean": 5902.219512057898,
+        "sample_standard_deviation": 148.13974827410678
+      },
+      "throughput_successful_per_second": {
+        "mean": 5902.219512057898,
+        "sample_standard_deviation": 148.13974827410678
+      }
+    }
+  },
+  "warmup_outcomes_equivalent": true
+}

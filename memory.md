@@ -1,7 +1,7 @@
 # Project Memory: CBDC Privacy System
 
 **Last Updated:** October 11, 2026
-**Status:** Phase 3 Complete; Phase 4 Pending
+**Status:** Phases 1–5 Complete
 **Project Path:** `C:\Users\sumit\cbdc-privacy-system`
 
 ---
@@ -27,7 +27,7 @@
   - Public key hex address generation (64 hex characters).
   - Canonical JSON payment signing with sorted keys and sorted inputs.
 * **Test Suite:** `tests/`
-  - 66 tests pass, including UTXO, wallet, Phase 1, batch processor, and concurrency stress coverage.
+  - 87 tests passed in full-suite runs before and after the Phase 4 matrix (October 11, 2026).
 * **Batch Authorization:** `BatchTransactionProcessor` requires a registered sender wallet and a valid Ed25519 signature for every structurally valid payment. Missing signatures are rejected before ledger validation/commit. Sequential simulator `UTXOEngine.transfer()` and test-fund issuance behavior are unchanged.
 
 ---
@@ -64,21 +64,23 @@
   - **Phase 1 — Thread-Safe State Synchronization & Formal Transaction Data Models** (Complete, verified)
   - **Phase 2 — Two-Phase Batch Validation Pipeline (`BatchTransactionProcessor`)** (Complete, verified)
   - **Phase 3 — Concurrency & Double-Spend Stress Test Suite** (Complete, verified)
-* **Status:** Complete (Verified with 66 passing tests)
-* **Next Active Phase:** **Phase 4 — Comparative Performance Benchmark Harness**
+  - **Phase 4 — Comparative Performance Benchmark Harness** (Complete, verified)
+  - **Phase 5 — Research Analysis, Findings Report, and Final Documentation** (Complete, owner review passed)
+* **Status:** Phases 1–5 complete.
+* **Current Phase:** None; all documented phases are complete.
 
 ---
 
 ## 6. Latest Verified Test and Benchmark Results
 
 * **Date:** October 11, 2026
-* **Test Suite Result:** **66 passed in 1.71s** (`.\.venv\Scripts\python.exe -m pytest -q`)
-  - `tests/test_utxo_engine.py`: 41 passed
-  - `tests/test_wallet.py`: 6 passed
-  - `tests/test_phase1.py`: 5 passed
-  - `tests/test_batch_processor.py`: 9 passed (non-conflicting signed batches, 2-way and 3-way double spend detection, missing/invalid signature rejection, invalid parameter rejection, order preservation)
-  - `tests/test_concurrency.py`: 5 passed (1,000 independent batch transactions, 100-thread spend race, read during locked commit, mixed batch outcomes, same-batch chained-spend limitation)
-* **Baseline Benchmark Result:** (`.\.venv\Scripts\python.exe benchmarks\baseline.py`)
+* **Test Suite Result:** **87 passed** in the full suite immediately before and after the Phase 4 matrix (`.\.venv\Scripts\python.exe -m pytest -q`; 4.95s before and 5.43s after).
+* **Current authoritative Phase 4 Matrix:** 36 configurations (3 transaction counts × 4 worker counts × 3 pairwise contention profiles), one warm-up and three measured runs each. The current reports match `benchmarks/results/compare_20261011T171052*_pairwise.json` and have matching Markdown files. Older `20261011T165800…` reports and hotspot smoke reports remain historical and are excluded from current findings. All 108 current measured comparisons passed outcome-equivalence and ledger-integrity checks.
+* **Latest full test suite:** **100 passed in 5.86 seconds** (`.\.venv\Scripts\python.exe -m pytest -q`; latest verified run).
+* **Historical full test results:** 87 passed before and after the Phase 4 matrix; the earlier Phase 5 verification recorded 100 passed. These historical results are retained separately from the latest 100-passed, 5.86-second run above.
+* **Verified Phase 4 findings:** Independently recomputed from the 36 current JSON reports and documented in `benchmarks/PHASE4_FINDINGS.md` and `docs/research-findings.md`. Aggregate attempted throughput: 5,385.95 tx/s sequential and 4,179.26 tx/s parallel; aggregate successful throughput: 4,757.59 and 3,691.68 tx/s. Mean/median per-configuration speedup from run-level rate means: 0.828x/0.818x; parallel was faster in 0 configurations, slower in 36, and tied in 0 using the ±1% band. These three-run results do not establish a universal performance result.
+* **Resource observations:** Newest matrix whole-system CPU means were 15.16% sequential and 17.74% parallel; mean process CPU time was 684.028 ms and 1,224.537 ms, respectively. Process CPU time is not CPU utilization. Parallel peak traced memory also exceeded sequential in all transaction-count groups; detailed grouped measurements and limitations are in the findings report.
+* **Historical baseline benchmark result:** (`.\.venv\Scripts\python.exe benchmarks\baseline.py`)
   - Attempted: 1,000 transactions
   - Successful: 1,000 transactions
   - Wall-clock time: 0.006673 s
@@ -89,6 +91,11 @@
 ## 7. Known Issues and Next Step
 
 * **Verified Limitations:** Batch validation checks inputs against the pre-batch ledger, so transactions cannot spend outputs created earlier in the same batch.
-* **Batch Authorization Verification:** `tests/test_batch_processor.py` and `tests/test_concurrency.py` passed together (14 passed in 1.61s); the complete suite passed (66 passed in 1.71s). Missing and invalid signatures were rejected without balance, spent-input, fee, transaction-ID, or history changes.
+* **Historical Batch Authorization Verification (Phase 3):** `tests/test_batch_processor.py` and `tests/test_concurrency.py` passed together (14 passed in 1.61s); the full suite at that earlier point passed 66 tests. Missing and invalid signatures were rejected without balance, spent-input, fee, transaction-ID, or history changes.
 * **Phase 3 Verification:** `tests/test_concurrency.py` passed three consecutive targeted runs before the batch authorization policy change (5 passed each). No deadlocks, unhandled concurrency exceptions, duplicate committed spends, or supply-conservation failures were observed in the verified tests.
-* **Next Immediate Step:** Phase 4: implement the comparative benchmark harness described in `phases.doc.md`.
+* **Phase 4 status:** Complete. All documented Phase 4 acceptance criteria are checked in `phases.doc.md`; matrix evidence and interpretation are in `benchmarks/PHASE4_FINDINGS.md`.
+* **Phase 4 follow-up verification (October 11, 2026):** Added attempted-throughput speedup fields to generated JSON reports (parallel / sequential, safely null for invalid rates), separate `hotspot` contention alongside default `pairwise`, optional final-outcome timestamp collection, and Windows whole-system CPU utilization from `GetSystemTimes`. Process CPU time and process CPU capacity share remain separately labeled. Derived speedups were backfilled into 37 earlier JSON/Markdown pairs; no historical benchmark execution or measured value changed. All 41 JSON reports contain speedup fields. Parallel latency is now measured as batch-submission-to-final-outcome latency, including queue waiting; reports state this definition and instrument overhead.
+* **Verified follow-up tests:** `tests/test_compare_parallel.py` — 28 passed; full suite — 94 passed. Small 100-transaction, 2-worker, 20% smoke runs passed integrity/equivalence checks for both pairwise (90 successes, 10 conflicts) and hotspot (81 successes, 19 conflicts), with zero rejections. Reports: `benchmarks/results/compare_20261011T121801047200Z_n100_w2_c20_pairwise.json` and matching `.md`; `benchmarks/results/compare_20261011T121801049641Z_n100_w2_c20_hotspot.json` and matching `.md`. At that checkpoint the full matrix had not yet been rerun and Phase 4 was still in progress.
+* **Latest verified latency/CPU update:** `tests/test_batch_processor.py` plus `tests/test_compare_parallel.py` — 43 passed; full suite — 100 passed. A 100-transaction hotspot smoke run recorded 81 successes, 19 conflicts, zero rejections, equivalent ledgers, parallel per-run p50/p95/p99 values, and whole-system CPU readings. Completion timestamp recording estimates were 630, 649, and 658 ns per outcome in that smoke run. See `benchmarks/results/compare_20261011T123807333983Z_n100_w2_c20_hotspot.json` and its matching Markdown. These smoke readings are not general performance findings.
+* **Phase 4 completion verification (October 11, 2026):** The current `20261011T171052…` pairwise matrix contains 36 unique configurations and 108 measured comparisons. All outcomes are equivalent, outcome totals reconcile, parallel p50/p95/p99 and whole-system CPU measurements are present, and no CPU values are unavailable. Phase 4 acceptance criteria are satisfied.
+* **Phase 5 documentation progress:** `README.md`, `docs/research-findings.md`, and `benchmarks/PHASE4_FINDINGS.md` use the newest 36 pairwise JSON reports (`compare_20261011T171052*_pairwise.json`) and independently recomputed results. The full-matrix analysis and hypothesis-evaluation criteria are checked; the owner reviewed the documentation and found no inconsistencies. All Phase 5 acceptance criteria are satisfied and Phase 5 is complete.
