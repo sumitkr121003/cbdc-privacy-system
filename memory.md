@@ -72,7 +72,7 @@
 ## 6. Latest Verified Test and Benchmark Results
 
 * **Date:** October 11, 2026
-* **Test Suite Result:** **66 passed in 1.70s** (`.\.venv\Scripts\python.exe -m pytest -q`)
+* **Test Suite Result:** **66 passed in 1.71s** (`.\.venv\Scripts\python.exe -m pytest -q`)
   - `tests/test_utxo_engine.py`: 41 passed
   - `tests/test_wallet.py`: 6 passed
   - `tests/test_phase1.py`: 5 passed
@@ -89,6 +89,6 @@
 ## 7. Known Issues and Next Step
 
 * **Verified Limitations:** Batch validation checks inputs against the pre-batch ledger, so transactions cannot spend outputs created earlier in the same batch.
-* **Batch Authorization Verification:** `tests/test_batch_processor.py` and `tests/test_concurrency.py` passed together (14 passed in 1.74s); the complete suite passed (66 passed in 1.70s). Missing and invalid signatures were rejected without balance, spent-input, fee, transaction-ID, or history changes.
+* **Batch Authorization Verification:** `tests/test_batch_processor.py` and `tests/test_concurrency.py` passed together (14 passed in 1.61s); the complete suite passed (66 passed in 1.71s). Missing and invalid signatures were rejected without balance, spent-input, fee, transaction-ID, or history changes.
 * **Phase 3 Verification:** `tests/test_concurrency.py` passed three consecutive targeted runs before the batch authorization policy change (5 passed each). No deadlocks, unhandled concurrency exceptions, duplicate committed spends, or supply-conservation failures were observed in the verified tests.
 * **Next Immediate Step:** Phase 4: implement the comparative benchmark harness described in `phases.doc.md`.
